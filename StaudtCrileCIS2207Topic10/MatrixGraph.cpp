@@ -150,6 +150,7 @@ bool MatrixGraph<LabelType>::remove(LabelType start, LabelType end) {
     }
     return false;
 }
+
 template<class LabelType>
 int MatrixGraph<LabelType>::getEdgeWeight(LabelType start, LabelType end) const {
     auto itStart = labelToIndex.find(start);
