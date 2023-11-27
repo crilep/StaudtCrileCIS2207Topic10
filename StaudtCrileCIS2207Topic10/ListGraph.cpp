@@ -1,5 +1,7 @@
 #include"ListGraph.h"
 #include <iostream>
+#include<queue>
+#include <stack>
 
 // Constructor
 template<class LabelType>
@@ -34,6 +36,7 @@ bool ListGraph<LabelType>::add(LabelType start, LabelType end, int edgeWeight) {
     return true;
 }
 
+// Removes from the graph
 template<class LabelType>
 bool ListGraph<LabelType>::remove(LabelType start, LabelType end)  {
 
@@ -44,35 +47,85 @@ bool ListGraph<LabelType>::remove(LabelType start, LabelType end)  {
     // Check if the item is available to remove
     if (startIter != adjacencyLists.end() && endIter != adjacencyLists.end()) {
         
+        // Remove the connection from the starting iterator and then from the end iterator
         startIter->second.remove(end);
         endIter->second.remove(start);
-        --numEdges;
+        numEdges--;
         return true;
     }
 
     return false;
 }
 
+// Returns edgeweight, but this is unweighted so return 1
 template<class LabelType>
 int ListGraph<LabelType>::getEdgeWeight(LabelType start, LabelType end) const {
-    // In an unweighted graph, just return 1 if there is an edge, otherwise 0
-    const auto& list = adjacencyLists.at(start);
-    for (const auto& vertex : list) {
-        if (vertex == end) {
-            return 1; // Edge exists
-        }
-    }
-    return 0; // No edge found
+    return 1;
+
 }
 
 template<class LabelType>
 void ListGraph<LabelType>::depthFirstTraversal(LabelType start, void visit(LabelType&)) {
-    // Implement DFS using adjacency list
+    // Mark all the vertices as not visited
+    std::vector<bool> visited;
+    visited.resize(adjacencyLists.size(), false);
+
+    // Create a stack for DFS
+    std::stack<LabelType> stack;
+
+    // Start by pushing the start vertex onto the stack
+    stack.push(start);
+
+    while (!stack.empty()) {
+        // Pop a vertex from stack
+        LabelType current = stack.top();
+        stack.pop();
+
+        // If the popped vertex has not been visited, visit it
+        if (!visited[current]) {
+            visited[current] = true;
+            visit(current);
+
+            // Push all adjacent vertices of the visited vertex onto the stack
+            for (const auto& adjacent : adjacencyLists[current]) {
+                if (!visited[adjacent]) {
+                    stack.push(adjacent);
+                }
+            }
+        }
+    }
 }
+
 
 template<class LabelType>
 void ListGraph<LabelType>::breadthFirstTraversal(LabelType start, void visit(LabelType&)) {
-    // Implement BFS using adjacency list
+    // Mark all the vertices as not visited
+    std::vector<bool> visited;
+    visited.resize(adjacencyLists.size(), false);
+
+    // Create a queue for BFS
+    std::queue<LabelType> queue;
+
+    // Mark the starting node as visited and enqueue it
+    visited[start] = true;
+    queue.push(start);
+
+    while (!queue.empty()) {
+        // Dequeue a vertex from queue
+        LabelType current = queue.front();
+        queue.pop();
+
+        // Visit the dequeued vertex
+        visit(current);
+
+        // Get all adjacent vertices of the dequeued vertex
+        for (const auto& adjacent : adjacencyLists[current]) {
+            if (!visited[adjacent]) {
+                visited[adjacent] = true;
+                queue.push(adjacent);
+            }
+        }
+    }
 }
 
 template<class LabelType>

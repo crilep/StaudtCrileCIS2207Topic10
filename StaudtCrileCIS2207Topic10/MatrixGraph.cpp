@@ -4,59 +4,61 @@
 #include <stack>
 #include <vector>
 
+// Display the matrix
 template<class LabelType>
 void MatrixGraph<LabelType>::printMatrix() const {
-    const int width = 2; // Adjust width as needed
-
-    // Assuming your matrix is square and uses a vector of vectors.
+    
+    const int WIDTH = 2; 
     int size = adjMatrix.size();
 
-    // Print the column headers
-    std::cout << std::setw(width) << " ";
-    for (int col = 0; col < size; ++col) {
-        std::cout << std::setw(width) << col;
-    }
-    std::cout << '\n';
-
     for (int row = 0; row < size; ++row) {
-        // Print the row header
-        std::cout << std::setw(width) << row;
+        // Print the row 
         for (int col = 0; col < size; ++col) {
             // Print each cell value
-            std::cout << std::setw(width) << adjMatrix[row][col];
+            std::cout << std::setw(WIDTH) << adjMatrix[row][col];
         }
+        // New row
         std::cout << '\n';
     }
 }
 
-
+// Constructor
 template<class LabelType>
 MatrixGraph<LabelType>::MatrixGraph() : numEdges(0) {
 
 }
 
+// Constructor
 template<class LabelType>
 MatrixGraph<LabelType>::MatrixGraph(int size) : size(size), adjMatrix(size, std::vector<int>(size, 0)) {
-    // The adjacency matrix is now a size x size matrix filled with zeros.
+  
 }
 
-
+// Traverse using depth first
 template<class LabelType>
 void MatrixGraph<LabelType>::depthFirstTraversal(LabelType start, void visit(LabelType&)) {
-    if (start < 0 || start >= size) return; // Start vertex must be within bounds.
+    
+    // Check if start is in bounds
+    if (start < 0 || start >= size) return; 
 
+    // Create an all false vector
     std::stack<LabelType> stack;
     std::vector<bool> visited(size, false);
 
+    // Set first as visited and push it to the stack
     visited[start] = true;
     stack.push(start);
 
+    // Loop through the matrix using depth first
     while (!stack.empty()) {
+
+        // Set the current to the top of the stack, then pop the vaule and visit it
         LabelType currentVertex = stack.top();
         stack.pop();
         visit(currentVertex);
 
-        for (int adjacent = 0; adjacent < size; ++adjacent) {
+        // Loop through each unvisited and add them to the stack
+        for (int adjacent = 0; adjacent < size; adjacent++) {
             if (adjMatrix[currentVertex][adjacent] && !visited[adjacent]) {
                 visited[adjacent] = true;
                 stack.push(adjacent);
@@ -65,99 +67,85 @@ void MatrixGraph<LabelType>::depthFirstTraversal(LabelType start, void visit(Lab
     }
 }
 
+// Traverse using breadth first
 template<class LabelType>
 void MatrixGraph<LabelType>::breadthFirstTraversal(LabelType start, void visit(LabelType&)) {
-    // Resetting visited and distance vectors
-    visited.assign(getNumVertices(), false);
-    distance.assign(getNumVertices(), 0);
+    
+    // Check if start is in bounds
+    if (start < 0 || start >= size) return;
 
-    // Getting the index of the start node
-    int startIdx = labelToIndex[start];
+    // Start with a vector of all visited being false
+    std::vector<bool> visited(size, false);
+    std::queue<LabelType> q;
 
-    std::queue<int> q;
-    q.push(startIdx);
-    visited[startIdx] = true;
-    distance[startIdx] = 0;
+    // Enqueue the start and mark as visited
+    q.push(start);
+    visited[start] = true;
 
+    // Loop until all are visited
     while (!q.empty()) {
-        int curr = q.front();
+       
+        // Set the current and dequeue it, then visit
+        LabelType current = q.front();
         q.pop();
+        visit(current); 
 
-        LabelType currLabel = indexToLabel[curr];
-        visit(currLabel); // Calling the visit function on the current node
-
-        for (int i = 0; i < getNumVertices(); ++i) {
-            if (adjMatrix[curr][i] != 0 && !visited[i]) { // Checking for an edge and if the node is not visited
+        // Loop all unvisited
+        for (int i = 0; i < size; ++i) {
+            if (adjMatrix[current][i] != 0 && !visited[i]) {
                 q.push(i);
-                distance[i] = distance[curr] + 1;
                 visited[i] = true;
-
-                LabelType childLabel = indexToLabel[i];
-                std::cout << "node: " << currLabel << " child: " << childLabel << "\n";
             }
         }
     }
 }
 
-template<class LabelType>
-int MatrixGraph<LabelType>::getOrCreateIndex(const LabelType& label) {
-    auto it = labelToIndex.find(label);
-    if (it == labelToIndex.end()) {
-        int index = indexToLabel.size();
-            indexToLabel.push_back(label);
-            labelToIndex[label] = index;
-            for (auto& row : adjMatrix) {
-                row.push_back(0);
-            }
-            adjMatrix.push_back(std::vector<int>(indexToLabel.size(), 0));
-            return index;
-        }
-        return it->second;
-    }
-
+// Returns the number of vertices
 template<class LabelType>
 int MatrixGraph<LabelType>::getNumVertices() const {
-    return indexToLabel.size();
+    return vertices.size();
 }
 
+// Returns the number of edges
 template<class LabelType>
 int MatrixGraph<LabelType>::getNumEdges() const  {
     return numEdges;
 }
 
+// Add to the matrix
 template<class LabelType>
 bool MatrixGraph<LabelType>::add(LabelType start, LabelType end, int edgeWeight) {
-    // Check if the indices are within bounds
+
+    // Check if both start and end are in bounds
     if (start >= 0 && start < size && end >= 0 && end < size) {
-        adjMatrix[start][end] = 1; // Add edge from start to end
-        adjMatrix[end][start] = 1; // Add edge from end to start, for undirected graph
+        // Add to the matrix with a 1 for connected
+        adjMatrix[start][end] = 1; 
+        adjMatrix[end][start] = 1; 
         return true;
     }
-    return false; // Return false if the indices are out of bounds
+    return false; 
 }
 
-
+// Removes from the matrix
 template<class LabelType>
 bool MatrixGraph<LabelType>::remove(LabelType start, LabelType end) {
-    // Check if both start and end indices are within bounds
+
+    // Check if both start and end are in bounds
     if (start >= 0 && start < size && end >= 0 && end < size) {
+
         // Check if there is an edge to remove
         if (adjMatrix[start][end] == 1) {
-            adjMatrix[start][end] = 0; // Remove edge from start to end
-            adjMatrix[end][start] = 0; // Remove edge from end to start for undirected graph
+            // Remove the edge both ways
+            adjMatrix[start][end] = 0; 
+            adjMatrix[end][start] = 0; 
             return true;
         }
     }
     return false;
 }
 
+// Return the edgeweight of 1, because this is unweighted
 template<class LabelType>
 int MatrixGraph<LabelType>::getEdgeWeight(LabelType start, LabelType end) const {
-    auto itStart = labelToIndex.find(start);
-    auto itEnd = labelToIndex.find(end);
-    if (itStart != labelToIndex.end() && itEnd != labelToIndex.end()) {
-        return adjMatrix[itStart->second][itEnd->second];
-    }
-    
-    return -1;
+    return 1;
 }
